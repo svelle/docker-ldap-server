@@ -1,11 +1,11 @@
 version: "3.7"
 services:
   ldap_server:
-    # image: wshihadeh/openldap:withdata
-    build: ./
+    image: ./
+    command: --loglevel debug
     environment:
       LDAP_ADMIN_PASSWORD: test1234
-      LDAP_BASE_DN: dc=mattermost,dc=internal
+      LDAP_BASE_DN: dc=planet,dc=express
     ports:
       - 389:389
     volumes:

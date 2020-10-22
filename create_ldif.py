@@ -1,38 +1,45 @@
-#!/bin/python3
+import jsonlines
+import re
 
-org="dc=planet,dc=express"
-filename="bootstrap.ldif"
+org = "dc=planet,dc=express"
+outfile = "bootstrap.ldif"
+infile = "export.jsonl"
+users = {}
+
+
+def fetch_users():
+    with jsonlines.open(infile) as file:
+        for line in file:
+            if line["type"] == "user":
+                in_user = line['user']
+                out_user = {'cn': in_user['username'], 'mail': in_user['email'], 'givenname': in_user['first_name'],
+                            'sn': in_user['last_name'], 'password': re.escape(in_user['password']),
+                            'displayname': f"{in_user['first_name']} {in_user['last_name']}"}
+                if in_user['username'] not in users:
+                    users[in_user['username']] = out_user
+
 
 def create_user():
     i = 0
-    f = open(filename, "w")
-    while i < 10000:
-        user = f"dn: cn=developer,{org}\n\
+    f = open(outfile, "w")
+    for _, user in users.items():
+        out_user = f"dn: cn={user['cn']},{org}\n\
 changetype: add\n\
 objectclass: inetOrgPerson\n\
-cn: maintainer\n\
-givenname: givenname{i}\n\
-sn: surname{i}\n\
-displayname: User{i} Name{i}\n\
-mail: user{i}r@example.com\n\
-userpassword: UserPass{i}234\!\n\n"
-        f.write(user)
+cn: {user['cn']}\n\
+givenname: {user['givenname']}\n\
+sn: {user['sn']}\n\
+displayname: {user['displayname']}\n\
+mail: {user['mail']}\n\
+userpassword: {user['password']}\n\n"
+        f.write(out_user)
         i += 1
     f.close()
 
+
 def append_org():
-    f = open(filename, "a")
-    appendage = f"dn: cn=adminuser,{org}\n\
-changetype: add\n\
-objectclass: inetOrgPerson\n\
-cn: adminuser\n\
-givenname: Admin\n\
-sn: User\n\
-displayname: Administrator\n\
-mail: admin@example.com\n\
-userpassword: admin_pass\n\
-\n\
-dn: ou=Groups,{org}\n\
+    f = open(outfile, "a")
+    appendage = f"dn: ou=Groups,{org}\n\
 changetype: add\n\
 objectclass: organizationalUnit\n\
 ou: Groups\n\
@@ -46,16 +53,11 @@ dn: cn=Admins,ou=Groups,{org}\n\
 changetype: add\n\
 cn: Admins\n\
 objectclass: groupOfUniqueNames\n\
-uniqueMember: cn=admin,{org}\n\
-\n\
-dn: cn=Maintaners,ou=Groups,{org}\n\
-changetype: add\n\
-cn: Maintaners\n\
-objectclass: groupOfUniqueNames\n\
-uniqueMember: cn=maintainer,{org}\n\
-uniqueMember: cn=developer,{org}\n"
+uniqueMember: cn=adminuser,{org}\n"
     f.write(appendage)
     f.close()
 
+
+fetch_users()
 create_user()
 append_org()
