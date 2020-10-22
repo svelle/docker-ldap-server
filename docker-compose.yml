@@ -1,7 +1,8 @@
 version: "3.7"
 services:
   ldap_server:
-    image: wshihadeh/openldap:withdata
+    # image: wshihadeh/openldap:withdata
+    build: ./
     environment:
       LDAP_ADMIN_PASSWORD: test1234
       LDAP_BASE_DN: dc=mattermost,dc=internal

@@ -22,7 +22,17 @@ userpassword: UserPass{i}234\!\n\n"
 
 def append_org():
     f = open(filename, "a")
-    appendage = "dn: ou=Groups,{org}\n\
+    appendage = f"dn: cn=adminuser,{org}\n\
+changetype: add\n\
+objectclass: inetOrgPerson\n\
+cn: adminuser\n\
+givenname: Admin\n\
+sn: User\n\
+displayname: Administrator\n\
+mail: admin@example.com\n\
+userpassword: admin_pass\n\
+\n\
+dn: ou=Groups,{org}\n\
 changetype: add\n\
 objectclass: organizationalUnit\n\
 ou: Groups\n\
